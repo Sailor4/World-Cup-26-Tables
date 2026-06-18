@@ -1,0 +1,17 @@
+# pycharm
+.idea/
+
+# env
+.venv/
+venv/
+ENV/
+
+# leftovers
+__pycache__/
+*.py[cod]
+*$py.class
+
+# os related
+Thumbs.db
+Desktop.ini
+.DS_Store
