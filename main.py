@@ -6,6 +6,7 @@ import requests
 import os
 from dotenv import load_dotenv
 
+# Load environment variables from .env file
 load_dotenv()
 
 app = FastAPI()
@@ -32,28 +33,26 @@ def get_base_data():
         mapped_matches = []
 
         for match in new_matches:
-            # 1. Вземаме сигурни данни за отборите
             home_team_obj = match.get("homeTeam")
             away_team_obj = match.get("awayTeam")
 
-            # Ако изобщо липсва структурата за отборите, прескачаме
+            # Skip the match if team objects are missing (e.g., future elimination stages)
             if not home_team_obj or not away_team_obj:
                 continue
 
             home_name = home_team_obj.get("name")
             away_name = away_team_obj.get("name")
 
-            # 2. ЖЕЛЕЗНА ЗАЩИТА: Ако името е празно, None или съдържа служебни празни стрингове, прескачаме!
+            # Skip if names are missing, None, or placeholder strings
             if not home_name or not away_name or home_name == "None" or away_name == "None":
                 continue
 
-            # 3. Проверка за групата: Ако няма група (защото е елиминация), прескачаме!
-            # Махаме "Group A" по подразбиране, за да не пълним Група А с боклуци
+            # Skip if there is no group assigned (e.g., elimination rounds)
             raw_group = match.get("group")
             if not raw_group:
                 continue
 
-            # Превръщаме служебното "GROUP_A" в "Group A"
+            # Convert standard "GROUP_A" format to "Group A"
             clean_group = raw_group.replace("_", " ").title()
 
             # Extract scores safely
@@ -81,6 +80,7 @@ def get_base_data():
 
 
 def get_live_world_cup_data():
+    """Process match data to calculate live group standings and group matches"""
     matches = get_base_data()
     groups = {}
 
@@ -130,6 +130,7 @@ def get_live_world_cup_data():
 
 
 def get_upcoming_matches(limit=8):
+    """Retrieve the next upcoming matches for today and tomorrow"""
     matches = get_base_data()
     upcoming = []
 
@@ -169,23 +170,26 @@ def get_upcoming_matches(limit=8):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    """Render the homepage dashboard with upcoming matches"""
     next_matches = get_upcoming_matches(limit=8)
     return templates.TemplateResponse(request, "index.html", {"request": request, "upcoming": next_matches})
 
 
 @app.get("/groups", response_class=HTMLResponse)
 async def groups_page(request: Request):
+    """Render the groups standings and fixtures page"""
     live_groups = get_live_world_cup_data()
     return templates.TemplateResponse(request, "groups.html", {"request": request, "groups": live_groups})
 
 
 @app.get("/eliminations", response_class=HTMLResponse)
 async def eliminations_page(request: Request):
+    """Render the tournament elimination bracket stage"""
     return templates.TemplateResponse(request, "eliminations.html", {"request": request})
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    # Пускаме го отново на 0.0.0.0, за да е достъпен през мрежата
+    # Run the server on 0.0.0.0 to make it accessible over the local network and reverse proxy
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
