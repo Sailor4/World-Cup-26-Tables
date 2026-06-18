@@ -3,111 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Световно Първенство 2026</title>
+    <title>Начало - Световно Първенство</title>
     <style>
         body {
             background-color: #0f172a;
             color: #f8fafc;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .welcome-container {
-            text-align: center;
-            max-width: 800px;
-            padding: 20px;
         }
 
         h1 {
             color: #38bdf8;
-            font-size: 2.5rem;
             text-transform: uppercase;
             letter-spacing: 3px;
             margin-bottom: 10px;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
         }
 
-        p {
+        .subtitle {
             color: #94a3b8;
-            font-size: 1.2rem;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
         }
 
-        /* Контейнер за бутоните-карти */
-        .menu-grid {
+        .main-layout {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
             width: 100%;
-            max-width: 700px;
+            max-width: 1100px;
         }
 
-        /* Стил на големите бутони */
-        .menu-card {
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .menu-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .menu-btn {
             background-color: #1e293b;
-            border: 2px solid #334155;
-            border-radius: 16px;
-            padding: 40px 20px;
-            text-align: center;
-            text-decoration: none;
             color: #f8fafc;
-            cursor: pointer;
-
-            /* Мазна анимация при посочване */
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-decoration: none;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        .menu-card:hover {
-            transform: translateY(-8px) scale(1.03);
+        .menu-btn:hover {
             border-color: #38bdf8;
-            box-shadow: 0 15px 30px -10px rgba(56, 189, 248, 0.3);
-        }
-
-        .menu-card h2 {
-            margin: 0 0 10px 0;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(56, 189, 248, 0.2);
             color: #38bdf8;
-            font-size: 1.6rem;
         }
 
-        .menu-card p {
-            margin: 0;
-            font-size: 1rem;
-            color: #94a3b8;
+        .upcoming-section {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
-        /* Специален цвят за бъдещите елиминации */
-        .menu-card.eliminations-card:hover {
-            border-color: #fbbf24;
-            box-shadow: 0 15px 30px -10px rgba(251, 191, 36, 0.3);
-        }
-        .menu-card.eliminations-card h2 {
+        .upcoming-title {
             color: #fbbf24;
+            font-size: 1.4rem;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .upcoming-title span {
+            font-size: 0.9rem;
+            background-color: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .match-card {
+            background-color: #0f172a;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+
+        .match-card:hover {
+            border-color: #38bdf8;
+        }
+
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .match-group {
+            font-size: 0.75rem;
+            color: #38bdf8;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .match-teams {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .match-time-box {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .match-time {
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .match-date {
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .no-matches {
+            color: #94a3b8;
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
 
-    <div class="welcome-container">
-        <h1>Световно Първенство</h1>
-        <p>Следете класирането, групите и директните елиминации</p>
+    <h1>Fifa World Cup 2026</h1>
+    <div class="subtitle">Световно Първенство 2026 - Статистика на Живо</div>
 
-        <div class="menu-grid">
-            <a href="/groups" class="menu-card">
-                <h2>⚽ Групова Фаза</h2>
-                <p>Всички групи, временно класиране и изиграни мачове</p>
-            </a>
+    <div class="main-layout">
+        <div class="menu-section">
+            <a href="/groups" class="menu-btn">📊 Класиране & Групи</a>
+            <a href="/eliminations" class="menu-btn">🏆 Елиминационна Фаза</a>
+        </div>
 
-            <a href="/eliminations" class="menu-card eliminations-card">
-                <h2>🏆 Елиминации</h2>
-                <p>Схема на директните елиминации от 1/8 финал до финал</p>
-            </a>
+        <div class="upcoming-section">
+            <div class="upcoming-title">
+                Предстоящи мачове
+                <span>Следващи 8</span>
+            </div>
+
+            {% if upcoming %}
+                {% for match in upcoming %}
+                <div class="match-card">
+                    <div class="match-info">
+                        <span class="match-group">
+                            {% if "Group" in match.group %}
+                                Група {{ match.group.split(' ')[1] }}
+                            {% else %}
+                                {{ match.group }}
+                            {% endif %}
+                        </span>
+                        <span class="match-teams">{{ match.teams }}</span>
+                    </div>
+                    <div class="match-time-box">
+                        <span class="match-time">🕒 {{ match.time }}</span>
+                        <span class="match-date">{{ match.date }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-matches">Няма предстоящи мачове в момента.</div>
+            {% endif %}
         </div>
     </div>
 
