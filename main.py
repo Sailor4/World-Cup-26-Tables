@@ -3,18 +3,78 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from datetime import datetime, timedelta
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-DATA_URL = "https://fixturedownload.com/feed/json/fifa-world-cup-2026"
+DATA_URL = "https://api.football-data.org/v4/competitions/WC/matches"
+API_KEY = os.getenv("FOOTBALL_API_KEY", "")
 
 
 def get_base_data():
-    """Helper to fetch raw data from the live feed safely"""
+    """Helper to fetch raw data from football-data.org and map it to the old format"""
     try:
-        response = requests.get(DATA_URL, timeout=10)
-        return response.json()
+        clean_key = str(API_KEY).strip()
+        headers = {
+            "X-Auth-Token": clean_key,
+            "Accept": "application/json"
+        }
+
+        response = requests.get(DATA_URL, headers=headers, timeout=5)
+        response.raise_for_status()
+        raw_data = response.json()
+
+        new_matches = raw_data.get("matches", [])
+        mapped_matches = []
+
+        for match in new_matches:
+            # 1. Вземаме сигурни данни за отборите
+            home_team_obj = match.get("homeTeam")
+            away_team_obj = match.get("awayTeam")
+
+            # Ако изобщо липсва структурата за отборите, прескачаме
+            if not home_team_obj or not away_team_obj:
+                continue
+
+            home_name = home_team_obj.get("name")
+            away_name = away_team_obj.get("name")
+
+            # 2. ЖЕЛЕЗНА ЗАЩИТА: Ако името е празно, None или съдържа служебни празни стрингове, прескачаме!
+            if not home_name or not away_name or home_name == "None" or away_name == "None":
+                continue
+
+            # 3. Проверка за групата: Ако няма група (защото е елиминация), прескачаме!
+            # Махаме "Group A" по подразбиране, за да не пълним Група А с боклуци
+            raw_group = match.get("group")
+            if not raw_group:
+                continue
+
+            # Превръщаме служебното "GROUP_A" в "Group A"
+            clean_group = raw_group.replace("_", " ").title()
+
+            # Extract scores safely
+            score_data = match.get("score", {})
+            full_time = score_data.get("fullTime", {})
+            home_score = full_time.get("home")
+            away_score = full_time.get("away")
+
+            # Map the new API structure to the old keys that your code expects
+            mapped_match = {
+                "Group": clean_group,
+                "DateUtc": match.get("utcDate", "").replace("Z", "").replace("T", " "),
+                "HomeTeam": home_name,
+                "AwayTeam": away_name,
+                "HomeTeamScore": home_score if match.get("status") == "FINISHED" else None,
+                "AwayTeamScore": away_score if match.get("status") == "FINISHED" else None,
+            }
+            mapped_matches.append(mapped_match)
+
+        return mapped_matches
+
     except Exception as e:
         print(f"Error fetching live data: {e}")
         return []
@@ -70,31 +130,25 @@ def get_live_world_cup_data():
 
 
 def get_upcoming_matches(limit=8):
-    # Fetch all raw matches from the live feed
     matches = get_base_data()
     upcoming = []
 
-    # Define the target Bulgarian dates we want to show on the dashboard
     today_bg_str = "2026-06-18"
     tomorrow_bg_str = "2026-06-19"
 
     for match in matches:
         if match.get("Group") and "Group" in match["Group"]:
             try:
-                # Convert to Bulgarian time using the exact space format from the feed
                 match_utc = datetime.strptime(match["DateUtc"][:16], "%Y-%m-%d %H:%M")
                 match_bg = match_utc + timedelta(hours=3)
             except Exception:
                 continue
 
-            # Get the actual calendar date in Bulgaria
             match_date_bg = match_bg.strftime("%Y-%m-%d")
 
-            # Check if this Bulgarian date falls into today or tomorrow
             if match_date_bg == today_bg_str or match_date_bg == tomorrow_bg_str:
                 is_played = match["HomeTeamScore"] is not None and match["AwayTeamScore"] is not None
 
-                # Format time display dynamically: show score if finished, Bulgarian time if upcoming
                 if is_played:
                     time_display = f"{match['HomeTeamScore']}:{match['AwayTeamScore']}"
                 else:
@@ -107,7 +161,6 @@ def get_upcoming_matches(limit=8):
                     "teams": f"{match['HomeTeam']} - {match['AwayTeam']}"
                 })
 
-            # Stop once we have gathered our 8 matches
             if len(upcoming) == limit:
                 break
 
@@ -116,7 +169,6 @@ def get_upcoming_matches(limit=8):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    # Fetch the next 8 matches for the home dashboard
     next_matches = get_upcoming_matches(limit=8)
     return templates.TemplateResponse(request, "index.html", {"request": request, "upcoming": next_matches})
 
@@ -135,4 +187,5 @@ async def eliminations_page(request: Request):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", reload=True)
+    # Пускаме го отново на 0.0.0.0, за да е достъпен през мрежата
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

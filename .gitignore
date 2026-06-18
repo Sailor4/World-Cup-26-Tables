@@ -5,6 +5,7 @@
 .venv/
 venv/
 ENV/
+.env
 
 # leftovers
 __pycache__/
