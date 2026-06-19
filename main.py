@@ -130,12 +130,16 @@ def get_live_world_cup_data():
 
 
 def get_upcoming_matches(limit=8):
-    """Retrieve the next upcoming matches for today and tomorrow"""
+    """Retrieve the next upcoming matches for today and tomorrow dynamically"""
     matches = get_base_data()
     upcoming = []
 
-    today_bg_str = "2026-06-18"
-    tomorrow_bg_str = "2026-06-19"
+    # Get the current dynamic date in Bulgarian time (UTC + 3)
+    now_utc = datetime.utcnow()
+    now_bg = now_utc + timedelta(hours=3)
+
+    today_bg_str = now_bg.strftime("%Y-%m-%d")
+    tomorrow_bg_str = (now_bg + timedelta(days=1)).strftime("%Y-%m-%d")
 
     for match in matches:
         if match.get("Group") and "Group" in match["Group"]:
